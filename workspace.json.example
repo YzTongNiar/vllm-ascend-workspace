@@ -1,0 +1,12 @@
+{
+  "repositories": {
+    "vllm": "vllm",
+    "vllm-ascend": "vllm-ascend"
+  },
+  "tools": {
+    "benchmark": "tools/benchmark",
+    "aisbench_auto_tools": "tools/aisbench_auto_tools",
+    "cannbot-skills": "tools/cannbot-skills",
+    "vllm-ascend-skills": "tools/vllm-ascend-skills"
+  }
+}
