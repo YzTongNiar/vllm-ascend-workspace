@@ -10,3 +10,9 @@
 - Cleanup acts on user-selected objects. Query PR status when the user wants that advice.
 - Keep reusable instructions separate from task progress and experiment records. Update affected command and path documentation alongside implementation changes.
 - Maintain Chinese `README.md` as the default and English `README.en.md` with matching examples and reciprocal links. Write AGENTS.md and other Markdown documentation in English.
+
+## Remote script paths and executor identity
+
+- Read the executor's name or employee ID from `user_id` in untracked `.vaws-local/user.json`; if missing, ask and persist it before remote script execution.
+- Actual host and container script `cwd` paths must include `<user_id>` as a directory component. Create container scripts under `/workspace/scripts/<user_id>/`, `/home/<user_id>/`, `/mnt/share/<user_id>/`, or another user-specific data directory.
+- Keep weights and other large files on host data volumes, never the root filesystem. Verify backing mounts, including container mappings, and free space before writing.
