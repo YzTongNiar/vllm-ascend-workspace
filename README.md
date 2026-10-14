@@ -14,7 +14,7 @@
 ├── .vaws-local/             # 本地事项、临时数据与持久化结果
 ├── tools/                   # 自行安装和维护的独立工具、技能仓库
 ├── .agents/                 # 共享 agent 配置、辅助脚本与示例
-│   ├── scripts/             # 工作树创建、任务初始化和目录清理脚本
+│   ├── scripts/             # 仓库初始化、工作树和目录管理脚本
 │   └── examples/            # 可按需修改的任务示例
 ├── .claude/                 # Claude 项目配置与规则入口
 ├── .codex/                  # Codex 项目配置模板
@@ -30,11 +30,18 @@
 
 ## 使用
 
-按需初始化源码：
+初始化源码并配置个人 fork：
 
 ```bash
-git submodule update --init vllm vllm-ascend
-cp workspace.json.example workspace.json
+python3 .agents/scripts/repo_init.py
+```
+
+脚本会询问 GitHub 用户名，或分别输入两个 fork 的 URL / `OWNER/REPOSITORY`。用户名默认生成 HTTPS 地址；两个源码仓库的 `origin` 指向所选 fork，`upstream` 指向 `vllm-project`。选择保存在本地 `workspace.json` 的 `forks` 中，重复运行会复用；`.gitmodules` 保持社区上游地址。
+
+也可直接提供用户名：
+
+```bash
+python3 .agents/scripts/repo_init.py --github-user YOUR_GITHUB_USER --no-input
 ```
 
 `workspace.json` 保存个人配置。`repositories` 可为脚本中的仓库参数配置别名；配置路径相对于工作区根目录解析。`tools` 可登记自行安装的工具路径。

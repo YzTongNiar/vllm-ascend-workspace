@@ -14,7 +14,7 @@ A local development scaffold you can adapt to your workflow. The root repository
 ├── .vaws-local/              # Local notes, temporary data, and persistent results
 ├── tools/                   # Independently installed and maintained tool and skill repositories
 ├── .agents/                 # Shared agent configuration, helper scripts, and examples
-│   ├── scripts/             # Worktree creation, task initialization, and directory cleanup
+│   ├── scripts/             # Repository initialization, worktrees, and directory management
 │   └── examples/            # Task examples to adapt as needed
 ├── .claude/                 # Claude project configuration and rule entry points
 ├── .codex/                  # Codex project configuration templates
@@ -30,11 +30,18 @@ A local development scaffold you can adapt to your workflow. The root repository
 
 ## Usage
 
-Initialize the source repositories as needed:
+Initialize the source repositories and configure your forks:
 
 ```bash
-git submodule update --init vllm vllm-ascend
-cp workspace.json.example workspace.json
+python3 .agents/scripts/repo_init.py
+```
+
+The script asks for your GitHub username, or individual fork URLs / `OWNER/REPOSITORY` values. A username produces HTTPS URLs. Each source repository uses the selected fork as `origin` and `vllm-project` as `upstream`. Choices are saved under `forks` in local `workspace.json` and reused on subsequent runs; `.gitmodules` retains community upstream URLs.
+
+You can also supply a username directly:
+
+```bash
+python3 .agents/scripts/repo_init.py --github-user YOUR_GITHUB_USER --no-input
 ```
 
 `workspace.json` holds personal configuration. The `repositories` mapping can define aliases for repository arguments in the helper script; configured paths are resolved relative to the workspace root. The `tools` mapping can record paths to tools you install yourself.

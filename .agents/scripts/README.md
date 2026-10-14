@@ -1,6 +1,21 @@
-# Local directory and worktree operations
+# Workspace helper scripts
 
-`workspace.py` provides independently callable filesystem and Git operations. It uses Python 3 and a Git version that supports `git worktree add --relative-paths`.
+`repo_init.py` initializes source repositories and fork remotes. `workspace.py` provides independently callable filesystem and Git worktree operations. Both use Python 3 and Git; worktree creation requires `git worktree add --relative-paths` support.
+
+## Repository initialization
+
+Run `python3 .agents/scripts/repo_init.py` from the workspace root. It asks for a GitHub username, or individual fork URLs / `OWNER/REPOSITORY` values. Supply your existing forks. A username or shorthand produces HTTPS URLs; explicit Git URLs are used as supplied.
+
+```bash
+python3 .agents/scripts/repo_init.py --github-user YOUR_GITHUB_USER --no-input
+python3 .agents/scripts/repo_init.py --vllm-fork OWNER/vllm --vllm-ascend-fork OWNER/vllm-ascend --no-input
+```
+
+The script initializes missing `vllm` and `vllm-ascend` submodules at the workspace's recorded commits. Existing checkouts, branches and edits are retained. It configures each `origin` for the selected fork and `upstream` for `https://github.com/vllm-project/<repository>.git`, clearing separate push-URL overrides so fetch and push use those destinations. `.gitmodules` keeps the community URLs. Linked source worktrees share these remote settings.
+
+Fork choices are persisted in the ignored `workspace.json` under `forks.vllm` and `forks.vllm-ascend`. A new config starts from `workspace.json.example` when available; existing fields are retained. Explicit fork options take precedence over `--github-user`, followed by saved choices. Missing choices prompt the user; `--no-input` reports them before changing repositories. Agents should ask the user and pass the answers as arguments when interactive input is unavailable.
+
+`--root PATH` selects the workspace; by default it is located from the script, independent of the calling directory. Progress and prompts use stderr; the result is JSON on stdout. Initialization is separate from `workspace.py task-init`, which creates an individual task directory.
 
 ## Paths and configuration
 
@@ -47,3 +62,9 @@ python3 .agents/scripts/workspace.py task-init .worktrees/experiment --records .
 Commands write one JSON result to stdout and execution messages to stderr. Failures return a nonzero exit status and an error result; argument parsing errors use the CLI's usage output. Read the result before issuing a dependent operation.
 
 When changing an operation, keep its help, examples, and documented behavior aligned. Check filesystem and Git behavior with disposable local directories and repositories.
+
+Run repository initialization checks locally; their Git remotes use disposable local repositories:
+
+```bash
+python3 -m unittest discover -s .agents/scripts/tests -v
+```
