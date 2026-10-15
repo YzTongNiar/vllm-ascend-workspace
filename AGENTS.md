@@ -1,19 +1,16 @@
 # Workspace guidance
 
+These instructions apply to using this workspace for vLLM and vLLM Ascend development. Before modifying the workspace's own scripts, configuration, shared agent resources, or documentation, read [CONTRIBUTING.md](CONTRIBUTING.md).
+
 - Before changing code in a submodule or task worktree, read that repository's `AGENTS.md` at its checked-out revision, if present, and any more specific `AGENTS.md` applicable to the target files. Consult its contribution instructions when preparing commits or PRs.
-- `vllm/` and `vllm-ascend/` are separate source repositories referenced by submodules. Worktrees of the same repository share branches and remotes, while each has its own checkout. Use the repository and revision selected for the task.
-- During workspace initialization, ask for the user's GitHub username or both fork URLs unless supplied or saved. Use `.agents/scripts/repo_init.py` to initialize the source submodules with personal forks as `origin` and `vllm-project` as `upstream`.
-- For vLLM or vLLM Ascend development, create worktrees of the source repositories inside a task directory under `.worktrees/`. Do not create a worktree of the entire workspace repository for these tasks. See [.worktrees/README.md](.worktrees/README.md) for the reference layout.
-- Workspace helper paths are resolved from the script's workspace root, regardless of the calling directory. For worktree creation, task initialization or cleanup, read [.agents/scripts/README.md](.agents/scripts/README.md); `--root` selects another workspace.
-- When using an installed skill, read its `SKILL.md` and the resources relevant to the task. For configuring discovery from different working directories, consult [.agents/README.md](.agents/README.md).
+- `vllm/` and `vllm-ascend/` are separate source repositories referenced by submodules. For source development, create or reuse their worktrees at the task's selected revisions inside a task directory under `.worktrees/`; see [.worktrees/README.md](.worktrees/README.md). Worktrees of the same source repository share branches and remotes, while each has its own checkout.
+- Before initializing source repositories, creating worktrees, initializing tasks, or cleaning directories, read [.agents/scripts/README.md](.agents/scripts/README.md) for the corresponding helper, configuration, and path rules.
+- Read the selected skill's `SKILL.md`. For configuring discovery from different working directories, consult [.agents/README.md](.agents/README.md).
 - Use native local tools for local work. Prefer available MindIE Agent tools for remote NPU operations. Observe remote jobs through the backend that created them; inspect the original receipt before retrying an uncertain operation.
-- Validate scaffold changes with disposable local repositories and directories. Run hardware-dependent checks in an environment with the required devices and runtime.
-- Cleanup acts on user-selected objects. Query PR status when the user wants that advice.
-- Keep reusable instructions separate from task progress and experiment records. Update affected command and path documentation alongside implementation changes.
-- Maintain Chinese `README.md` as the default and English `README.en.md` with matching examples and reciprocal links. Write AGENTS.md and other Markdown documentation in English.
+- Limit cleanup to the objects or scope authorized by the user. Query PR status when it is needed to assess cleanup eligibility.
+- Keep task progress and experiment records in the task's record and result locations, separate from reusable instructions; see [.worktrees/README.md](.worktrees/README.md).
 
 ## Remote script paths and executor identity
 
-- Read the executor's name or employee ID from `user_id` in untracked `.vaws-local/user.json`; if missing, ask and persist it before remote script execution.
-- Actual host and container script `cwd` paths must include `<user_id>` as a directory component. Create container scripts under `/workspace/scripts/<user_id>/`, `/home/<user_id>/`, `/mnt/share/<user_id>/`, or another user-specific data directory.
+- Before remote script execution, read the executor's name or employee ID from `user_id` in untracked `.vaws-local/user.json`; ask and save it if missing. Use it as a directory component in the actual host and container script `cwd` paths, and place container scripts in a user-specific directory such as `/workspace/scripts/<user_id>/`.
 - Keep weights and other large files on host data volumes, never the root filesystem. Verify backing mounts, including container mappings, and free space before writing.

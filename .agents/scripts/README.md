@@ -57,14 +57,8 @@ Optional record links can be selected when initializing a task:
 python3 .agents/scripts/workspace.py task-init .worktrees/experiment --records .vaws-local/tasks/experiment/records --results .vaws-local/tasks/experiment/runs
 ```
 
-## Results and maintenance
+## Results
 
 Commands write one JSON result to stdout and execution messages to stderr. Failures return a nonzero exit status and an error result; argument parsing errors use the CLI's usage output. Read the result before issuing a dependent operation.
 
-When changing an operation, keep its help, examples, and documented behavior aligned. Check filesystem and Git behavior with disposable local directories and repositories.
-
-Run repository initialization checks locally; their Git remotes use disposable local repositories:
-
-```bash
-python3 -m unittest discover -s .agents/scripts/tests -v
-```
+For changes to these scripts, read the workspace [contribution guide](../../CONTRIBUTING.md) for validation and documentation requirements.

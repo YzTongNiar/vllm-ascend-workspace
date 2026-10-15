@@ -11,4 +11,4 @@ Optional skills can be installed or linked under `skills/<skill-name>/` using th
 
 These paths organize files. Instruction and skill loading depend on the client, its configuration, and the starting directory. When starting an agent from a submodule or task worktree, check which instructions and skills it actually discovers; use explicit file references or the client's supported configuration to make the intended resources available.
 
-Maintain shared content at its owning source. When editing a skill, update the affected instructions, scripts, references, assets, and tests together. Keep client-specific entry points small and use relative links for shared resources where supported.
+For changes to shared agent resources, read the workspace [contribution guide](../CONTRIBUTING.md).
