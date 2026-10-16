@@ -45,7 +45,7 @@ flowchart TB
 帮我初始化这个 vLLM-Ascend 开发工作区：https://github.com/mindie-agent/vllm-ascend-workspace
 ```
 
-<details open>
+<details>
 <summary>🤖 <b>AI Agent 自动初始化协议（Instructions for AI Agents）</b></summary>
 
 当你收到用户要求初始化 `vllm-ascend-workspace` 的指令时，请自动按顺序执行以下步骤：

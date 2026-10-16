@@ -45,7 +45,7 @@ Paste the following sentence into **Claude Code**, **OpenAI Codex CLI**, **Kimi 
 Please initialize this vLLM-Ascend development workspace for me: https://github.com/mindie-agent/vllm-ascend-workspace
 ```
 
-<details open>
+<details>
 <summary>🤖 <b>AI Agent Auto-Setup Protocol (Instructions for AI Agents)</b></summary>
 
 When the user asks you to set up `vllm-ascend-workspace`, execute the following steps automatically:
