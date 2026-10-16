@@ -1,65 +1,129 @@
-# vLLM Ascend workspace
+<div align="center">
 
-简体中文 | [English](README.en.md)
+# vLLM-Ascend Workspace
 
-可按个人习惯组合的本地开发脚手架。根仓库维护文档、配置模板、agent 配置和辅助脚本，并通过子模块引用 vLLM 与 vLLM Ascend。
+**面向 `vLLM` 与 `vLLM-Ascend` 多任务并行开发的轻量本地工作区脚手架**  
+*A lightweight, multi-worktree local development scaffold for `vLLM` and `vLLM-Ascend` engineering.*
 
-## 目录结构
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square)](LICENSE)
+[![vLLM](https://img.shields.io/badge/Upstream-vLLM-00A8E8?style=flat-square)](https://github.com/vllm-project/vllm)
+[![vLLM-Ascend](https://img.shields.io/badge/Upstream-vLLM--Ascend-FF6B35?style=flat-square)](https://github.com/vllm-project/vllm-ascend)
+[![MindIE Agent](https://img.shields.io/badge/Ecosystem-MindIE_Agent-6366F1?style=flat-square)](https://github.com/mindie-agent/mindie-agent)
+
+**简体中文** · **[English](README.en.md)** · **[脚本说明](.agents/scripts/README.zh.md)** · **[任务示例](.agents/examples/task/README.zh.md)** · **[维护指南](CONTRIBUTING.zh.md)**
+
+</div>
+
+---
+
+## 💡 为什么需要这个工作区？
+
+在做 `vLLM-Ascend` 开发、算子适配或 PR 检视时，开发者经常需要**同时对比 `vllm` 主仓与 `vllm-ascend` 插件仓的代码**，或者**同时推进多个互不干扰的修复分支**。
+
+`vllm-ascend-workspace` 提供了一个开箱即用的本地多任务脚手架：
+- **双仓联动管理**：通过 Git 子模块统一维护 `vllm` 与 `vllm-ascend` 上游基准，并一键将 `origin` 绑定到你自己的 GitHub Fork。
+- **多任务 Git Worktree 隔离**：每个开发任务在 `.worktrees/<task>/` 下拥有独立的 `vllm` 与 `vllm-ascend` 工作树，无需反复 `git stash` 或克隆多份几十 GB 的仓库。
+- **多 Agent 规则预置**：内置 `.claude/`、`.codex/`、`.cursor/`、`.trae/` 与 `AGENTS.md` 规则入口，配合 [MindIE Agent](https://github.com/mindie-agent/mindie-agent) 开箱即用。
+
+```mermaid
+flowchart TB
+    Root["vllm-ascend-workspace 根目录"] --> Sub["基准源码子模块<br/>vllm/ & vllm-ascend/"]
+    Root --> WT[".worktrees/ 多任务并行工作树"]
+    WT --> T1[".worktrees/fix-moe/<br/>├── vllm-ascend (独立分支)<br/>└── vllm (配套基准)"]
+    WT --> T2[".worktrees/perf-decode/<br/>├── vllm-ascend (独立分支)<br/>└── vllm (配套基准)"]
+```
+
+---
+
+## ⚡ 快速开始（Quick Start）
+
+### 方式一：一句话让你的 AI Agent 自动初始化（推荐）
+
+直接把下面这句话发给你的 **Claude Code**、**Codex**、**Kimi Code** 或 **Cursor**：
 
 ```text
-.
-├── vllm/                    # vLLM 源码子模块，便于人工查验
-├── vllm-ascend/             # vLLM Ascend 源码子模块，便于人工查验
-├── .worktrees/              # 开发工作树与任务工作目录
-├── .vaws-local/             # 本地事项、临时数据与持久化结果
-├── tools/                   # 自行安装和维护的独立工具、技能仓库
-├── .agents/                 # 共享 agent 配置、辅助脚本与示例
-│   ├── scripts/             # 仓库初始化、工作树和目录管理脚本
-│   └── examples/            # 可按需修改的任务示例
-├── .claude/                 # Claude 项目配置与规则入口
-├── .codex/                  # Codex 项目配置模板
-├── .cursor/                 # Cursor 项目配置与规则入口
-├── .trae/                   # Trae 项目配置与规则入口
-├── .gitignore               # 根仓库的文件追踪范围
-├── .gitmodules              # 两个源码子模块的上游地址
-├── workspace.json.example   # 个人工作区配置模板
-├── AGENTS.md                # 使用工作区开发源码时的 Agent 约定
-├── CONTRIBUTING.md          # 工作区脚手架维护指南（英文）
-├── CONTRIBUTING.zh.md       # 工作区脚手架维护指南（中文）
-├── README.md                # 中文说明，默认入口
-└── README.en.md             # 英文说明
+帮我初始化这个 vLLM-Ascend 开发工作区：https://github.com/mindie-agent/vllm-ascend-workspace
 ```
 
-## 使用
+<details open>
+<summary>🤖 <b>AI Agent 自动初始化协议（Instructions for AI Agents）</b></summary>
 
-初始化源码并配置个人 fork：
+当你收到用户要求初始化 `vllm-ascend-workspace` 的指令时，请自动按顺序执行以下步骤：
+
+1. **克隆或进入工作区仓库**：
+   ```bash
+   git clone https://github.com/mindie-agent/vllm-ascend-workspace.git
+   cd vllm-ascend-workspace
+   ```
+2. **获取用户的 GitHub 用户名并初始化双仓子模块与 Fork 远端**：
+   - 先尝试通过 `gh api user -q .login` 自动获取当前登录的 GitHub 用户名；若未安装 `gh`，再询问用户。
+   - 执行非交互初始化：
+     ```bash
+     python3 .agents/scripts/repo_init.py --github-user <GITHUB_USERNAME> --no-input
+     ```
+3. **按用户当前任务按需创建独立 Worktree（如需开始具体任务）**：
+   ```bash
+   python3 .agents/scripts/workspace.py task-init .worktrees/<task-name> --title "<task-name>"
+   python3 .agents/scripts/workspace.py worktree-add vllm-ascend .worktrees/<task-name>/vllm-ascend --ref HEAD --branch feat/<task-name>
+   ```
+
+</details>
+
+---
+
+### 方式二：终端手动初始化（For Humans）
+
+#### 1. 初始化源码并绑定个人 Fork
 
 ```bash
+# 交互式输入 GitHub 用户名或 Fork 地址
 python3 .agents/scripts/repo_init.py
-```
 
-脚本会询问 GitHub 用户名，或分别输入两个 fork 的 URL / `OWNER/REPOSITORY`。用户名默认生成 HTTPS 地址；两个源码仓库的 `origin` 指向所选 fork，`upstream` 指向 `vllm-project`。选择保存在本地 `workspace.json` 的 `forks` 中，重复运行会复用；`.gitmodules` 保持社区上游地址。
-
-也可直接提供用户名：
-
-```bash
+# 或直接指定 GitHub 用户名一键完成（自动将 origin 指向你的 Fork，upstream 指向 vllm-project）
 python3 .agents/scripts/repo_init.py --github-user YOUR_GITHUB_USER --no-input
 ```
 
-`workspace.json` 保存个人配置。`repositories` 可为脚本中的仓库参数配置别名；配置路径相对于工作区根目录解析。`tools` 可登记自行安装的工具路径。
+配置会自动保存在本地 `workspace.json` 的 `forks` 字段中，后续重复运行会自动复用。
 
-根目录源码可用于查验。下面的命令演示创建一个开发目录，并为两个源码仓库添加工作树；ref 和分支名按当前任务选择。
+#### 2. 为新任务创建独立的并行工作树（Worktree）
 
 ```bash
+# 1. 创建任务目录
 python3 .agents/scripts/workspace.py task-init .worktrees/demo --title demo
+
+# 2. 为 vllm-ascend 和 vllm 分别拉起独立工作树（可参考 .github/vllm-main-verified.commit 选择配套的 vllm 版本）
 python3 .agents/scripts/workspace.py worktree-add vllm-ascend .worktrees/demo/vllm-ascend --ref HEAD --branch codex/demo
 python3 .agents/scripts/workspace.py worktree-add vllm .worktrees/demo/vllm --ref HEAD
 ```
 
-脚本以自身所在工作区为路径基准，可从任意当前目录调用；`--root` 可指定另一个工作区。源码版本由调用参数选定。Ascend 配套开发可参考所选版本的 `.github/vllm-main-verified.commit` 选择 vLLM ref。
+---
 
-辅助命令及选项见 [.agents/scripts/README.zh.md](.agents/scripts/README.zh.md)（[English](.agents/scripts/README.md)）。任务示例见 [.agents/examples/task/README.zh.md](.agents/examples/task/README.zh.md)（目录 [.agents/examples/task](.agents/examples/task)）。工具和技能可自行放入 `tools/`，各自维护其 Git 仓库。
+## 📁 目录结构一览
 
-## 维护工作区
+```text
+.
+├── vllm/                    # vLLM 源码子模块（upstream -> vllm-project/vllm）
+├── vllm-ascend/             # vLLM-Ascend 源码子模块（upstream -> vllm-project/vllm-ascend）
+├── .worktrees/              # 多任务并行开发工作树目录（每个任务独立分支）
+├── .vaws-local/             # 本地任务笔记、临时数据与持久化结果
+├── tools/                   # 按需放入的独立辅助工具与技能仓库
+├── .agents/                 # 共享 Agent 配置、初始化/工作树管理脚本与任务示例
+│   ├── scripts/             # repo_init.py 与 workspace.py 脚本及文档
+│   └── examples/            # 任务工作流示例
+├── .claude/                 # Claude Code 项目配置与规则入口
+├── .codex/                  # OpenAI Codex 项目配置模板
+├── .cursor/                 # Cursor 项目配置与规则入口
+├── .trae/                   # Trae 项目配置与规则入口
+├── workspace.json.example   # 个人工作区配置模板
+├── AGENTS.md                # 工作区 Agent 协作约定
+├── CONTRIBUTING.zh.md       # 工作区脚手架维护指南（中文）
+└── CONTRIBUTING.md          # 工作区脚手架维护指南（英文）
+```
 
-修改本工作区的辅助脚本、配置模板、共享 agent 资源或文档前，请阅读 [CONTRIBUTING.zh.md](CONTRIBUTING.zh.md)（[English](CONTRIBUTING.md)），了解验证要求和文档约定。vLLM 与 vLLM Ascend 的贡献流程遵循各自源码仓库的说明。
+详细脚本参数说明见 [`.agents/scripts/README.zh.md`](.agents/scripts/README.zh.md)（[English](.agents/scripts/README.md)），完整任务示例见 [`.agents/examples/task/README.zh.md`](.agents/examples/task/README.zh.md)。
+
+---
+
+## 🤝 维护与贡献
+
+修改本工作区的辅助脚本、配置模板或文档前，请阅读 [`CONTRIBUTING.zh.md`](CONTRIBUTING.zh.md)（[English](CONTRIBUTING.md)）。针对 `vLLM` 与 `vLLM-Ascend` 本身的代码贡献，请直接遵循各自上游源码仓库的贡献规范。
