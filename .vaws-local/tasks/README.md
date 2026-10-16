@@ -1,5 +1,7 @@
 # Task data
 
+[中文](README.zh.md) | English
+
 This directory stores task records, experiment outputs, and related files. A task can use the following organization:
 
 ```text

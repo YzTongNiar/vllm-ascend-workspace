@@ -1,5 +1,7 @@
 # Contributing to the workspace
 
+[中文](CONTRIBUTING.zh.md) | English
+
 Read this guide when maintaining this workspace repository's helper scripts, configuration templates, shared agent resources, or documentation. Contributions to vLLM and vLLM Ascend follow the guidance in the corresponding source repository at the selected revision.
 
 ## Implementation and validation
@@ -20,5 +22,5 @@ Read this guide when maintaining this workspace repository's helper scripts, con
 
 ## Documentation
 
-- Maintain Chinese `README.md` as the default and English `README.en.md` with matching examples and reciprocal links.
-- Write this workspace's `AGENTS.md` and other shared Markdown documentation in English. Choose the language of task records according to the task and user requirements.
+- Maintain Chinese `README.md` as the default at the repository root and English `README.en.md` with matching examples and reciprocal links; maintain English `CONTRIBUTING.md` and subdirectory `README.md` files alongside Chinese `.zh.md` counterparts.
+- Write this workspace's `AGENTS.md` and shared agent instructions in English. Choose the language of task records according to the task and user requirements.

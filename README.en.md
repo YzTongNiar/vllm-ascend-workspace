@@ -24,7 +24,8 @@ A local development scaffold you can adapt to your workflow. The root repository
 ├── .gitmodules              # Upstream URLs for the two source submodules
 ├── workspace.json.example   # Personal workspace configuration template
 ├── AGENTS.md                # Agent guidance for source development using the workspace
-├── CONTRIBUTING.md          # Workspace scaffold maintenance guide
+├── CONTRIBUTING.md          # Workspace scaffold maintenance guide (English)
+├── CONTRIBUTING.zh.md       # Workspace scaffold maintenance guide (Chinese)
 ├── README.md                # Chinese documentation, the default entry point
 └── README.en.md             # English documentation
 ```
@@ -57,8 +58,8 @@ python3 .agents/scripts/workspace.py worktree-add vllm .worktrees/demo/vllm --re
 
 The script resolves paths relative to its workspace and can be invoked from any working directory. Use `--root` to select another workspace. Command arguments select the source revisions. For paired Ascend development, consult `.github/vllm-main-verified.commit` at the selected Ascend revision when choosing the vLLM ref.
 
-See [.agents/scripts/README.md](.agents/scripts/README.md) for helper commands and options, and [.agents/examples/task](.agents/examples/task) for a task example. You can place tools and skills in `tools/` and maintain each as an independent Git repository.
+See [.agents/scripts/README.md](.agents/scripts/README.md) ([中文](.agents/scripts/README.zh.md)) for helper commands and options, and [.agents/examples/task](.agents/examples/task) ([中文](.agents/examples/task/README.zh.md)) for a task example. You can place tools and skills in `tools/` and maintain each as an independent Git repository.
 
 ## Maintaining the workspace
 
-Before changing this workspace's helper scripts, configuration templates, shared agent resources, or documentation, read [CONTRIBUTING.md](CONTRIBUTING.md) for validation requirements and documentation conventions. Contributions to vLLM and vLLM Ascend follow the guidance in their respective source repositories.
+Before changing this workspace's helper scripts, configuration templates, shared agent resources, or documentation, read [CONTRIBUTING.md](CONTRIBUTING.md) ([中文](CONTRIBUTING.zh.md)) for validation requirements and documentation conventions. Contributions to vLLM and vLLM Ascend follow the guidance in their respective source repositories.

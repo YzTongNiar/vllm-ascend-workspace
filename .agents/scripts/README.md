@@ -1,5 +1,7 @@
 # Workspace helper scripts
 
+[中文](README.zh.md) | English
+
 `repo_init.py` initializes source repositories and fork remotes. `workspace.py` provides independently callable filesystem and Git worktree operations. Both use Python 3 and Git; worktree creation requires `git worktree add --relative-paths` support.
 
 ## Repository initialization

@@ -24,7 +24,8 @@
 ├── .gitmodules              # 两个源码子模块的上游地址
 ├── workspace.json.example   # 个人工作区配置模板
 ├── AGENTS.md                # 使用工作区开发源码时的 Agent 约定
-├── CONTRIBUTING.md          # 工作区脚手架维护指南
+├── CONTRIBUTING.md          # 工作区脚手架维护指南（英文）
+├── CONTRIBUTING.zh.md       # 工作区脚手架维护指南（中文）
 ├── README.md                # 中文说明，默认入口
 └── README.en.md             # 英文说明
 ```
@@ -57,8 +58,8 @@ python3 .agents/scripts/workspace.py worktree-add vllm .worktrees/demo/vllm --re
 
 脚本以自身所在工作区为路径基准，可从任意当前目录调用；`--root` 可指定另一个工作区。源码版本由调用参数选定。Ascend 配套开发可参考所选版本的 `.github/vllm-main-verified.commit` 选择 vLLM ref。
 
-辅助命令及选项见 [.agents/scripts/README.md](.agents/scripts/README.md)。任务示例见 [.agents/examples/task](.agents/examples/task)。工具和技能可自行放入 `tools/`，各自维护其 Git 仓库。
+辅助命令及选项见 [.agents/scripts/README.zh.md](.agents/scripts/README.zh.md)（[English](.agents/scripts/README.md)）。任务示例见 [.agents/examples/task/README.zh.md](.agents/examples/task/README.zh.md)（目录 [.agents/examples/task](.agents/examples/task)）。工具和技能可自行放入 `tools/`，各自维护其 Git 仓库。
 
 ## 维护工作区
 
-修改本工作区的辅助脚本、配置模板、共享 agent 资源或文档前，请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，了解验证要求和文档约定。vLLM 与 vLLM Ascend 的贡献流程遵循各自源码仓库的说明。
+修改本工作区的辅助脚本、配置模板、共享 agent 资源或文档前，请阅读 [CONTRIBUTING.zh.md](CONTRIBUTING.zh.md)（[English](CONTRIBUTING.md)），了解验证要求和文档约定。vLLM 与 vLLM Ascend 的贡献流程遵循各自源码仓库的说明。

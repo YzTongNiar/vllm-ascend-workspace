@@ -1,5 +1,7 @@
 # Agent resources
 
+[中文](README.zh.md) | English
+
 This directory holds shared helper scripts, examples, and project-specific agent resources. Start with the entry relevant to the task.
 
 | Entry | Purpose | Read when |

@@ -1,5 +1,7 @@
 # Persistent local data
 
+[中文](README.zh.md) | English
+
 This directory stores local notes, temporary data, and results to retain. The following layout is a reference; create the directories useful for your work and adapt their contents as needed.
 
 ```text

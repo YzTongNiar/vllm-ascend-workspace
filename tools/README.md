@@ -1,5 +1,7 @@
 # Local tools
 
+[中文](README.zh.md) | English
+
 This directory can hold tool and skill repositories that you install and maintain independently.
 
 | Example repository | Purpose |

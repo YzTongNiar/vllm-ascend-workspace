@@ -1,5 +1,7 @@
 # Development directories
 
+[中文](README.zh.md) | English
+
 This directory holds source repository worktrees grouped into task working directories. For vLLM and vLLM Ascend development, each task directory contains the source worktrees needed for that task.
 
 ## Reference layout
