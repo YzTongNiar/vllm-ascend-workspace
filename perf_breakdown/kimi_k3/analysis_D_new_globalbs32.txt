@@ -1,0 +1,23 @@
+== 新 D 基线 globalbs32_dspark7（24 步, 迭代≈170.8ms）==
+busy Σ 178.0ms/步 | 三类占比:
+  通信           78.92 ms/步   44.3% of busy
+  计算bound      59.34 ms/步   33.3% of busy
+  访存bound      39.76 ms/步   22.3% of busy
+
+Top12（含 bound 与流水特征）:
+    54.424ms/步 n= 205/步      通信  HcclLaunchAicpuKernel
+    29.183ms/步 n=  29/步 compute  FusedInferAttentionScore
+    13.858ms/步 n= 184/步  memory  aclnnGroupedMatmulWeightNz_GroupedMatmul_Group
+    12.070ms/步 n= 184/步 compute  SituMxQuant
+     7.821ms/步 n= 515/步 compute  aclnnMatmul_MatMulV3Common_MatMulV3
+     5.452ms/步 n=  92/步  memory  MoeDistributeCombineV3
+     5.303ms/步 n= 255/步  memory  aclnnQuantMatmulV5_QuantBatchMatmulV3_QuantBat
+     3.593ms/步 n=  92/步 compute  MoeDistributeDispatchV3
+     3.337ms/步 n=  69/步 compute  aclnnRecurrentKda_RecurrentKda_RecurrentKda
+     2.701ms/步 n= 186/步 compute  _apply_attn_res_kernel
+     2.295ms/步 n= 184/步  memory  aclnnQuantMatmulWeightNz_QuantBatchMatmulV4_Qu
+     1.574ms/步 n= 278/步 compute  DynamicMxQuant
+
+attn/moe 组:
+  [attn]   35.03ms/步 | 计算 54% vs 访存 46% | 组内通信 0.00ms/步 (0%)
+  [moe]   40.02ms/步 | 计算 51% vs 访存 49% | 组内通信 9.05ms/步 (23%)

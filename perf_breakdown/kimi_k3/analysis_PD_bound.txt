@@ -1,0 +1,71 @@
+
+==========================================================================
+== D（kimik3_A5_d_ep32, 39 步/前向, span 2.09s）==
+==========================================================================
+每步 wall ≈ 53.6ms | busy Σ 70.6ms | 占比（按算子时长归属）:
+  通信           10.20 ms/步   14.5% of busy   19.0% of wall
+  计算bound      22.66 ms/步   32.1% of busy   42.3% of wall
+  访存bound      37.72 ms/步   53.4% of busy   70.4% of wall
+
+Top10 算子（按每步耗时）:
+  算子                                             n/步     ms/步    bound  mac%  mte%  vec%
+  GroupedMatmulSituQuant                          92   10.392   memory   53  185   68
+  aclnnMatmul_MatMulV3Common_MatMulV3            314    6.593   memory   36   99    0
+  FlashMlaWithKvcache                             53    6.386  compute   41   69   40
+  aclnnGroupedMatmulWeightNz_GroupedMatmul_Gro    92    5.528   memory   49  173   65
+  SituMxQuant                                     92    5.456  compute    0   21   29
+  aclnnQuantMatmulWeightNz_QuantBatchMatmulV4_   184    4.261   memory   19  104   18
+  aclnnQuantMatmulV5_QuantBatchMatmulV3_QuantB   255    4.045   memory   25  119    0
+  MoeDistributeDispatchV3                         92    2.389   memory    0   17   14
+  MoeDistributeCombineV3                          92    1.881   memory    0   28    5
+  aclnnRecurrentKda_RecurrentKda_RecurrentKda     69    1.816  compute    0   19   70
+
+Attention / MoE bound（组内流水时间占比 + 组内通信）:
+  [attn] dur=  11.88ms/步 | 计算(流水)   59% vs 访存(流水)   41% | 组内通信 0.00ms/步 (0%)
+  [moe] dur=  30.45ms/步 | 计算(流水)   44% vs 访存(流水)   56% | 组内通信 4.27ms/步 (14%)
+
+==========================================================================
+== P（A3_p, 6 步/前向, span 10.75s）==
+==========================================================================
+每步 wall ≈ 1791.4ms | busy Σ 3262.0ms | 占比（按算子时长归属）:
+  通信         2056.08 ms/步   63.0% of busy  114.8% of wall
+  计算bound     623.33 ms/步   19.1% of busy   34.8% of wall
+  访存bound     582.55 ms/步   17.9% of busy   32.5% of wall
+
+Top10 算子（按每步耗时）:
+  算子                                             n/步     ms/步    bound  mac%  mte%  vec%
+  AivKernel                                      368  273.014       通信    0   64    0
+  aclnnGroupedMatmulWeightNz_GroupedMatmul_Gro   184  232.762   memory   37  150   11
+  hcom_broadcast__375_6_1                          0  231.777       通信    0    0    0
+  hcom_broadcast__375_9_1                          0  227.881       通信    0    0    0
+  hcom_broadcast__375_3_1                          0  227.752       通信    0    0    0
+  hcom_broadcast__375_0_1                          0  226.417       通信    0    0    0
+  aclnnChunkKdaFwd_KdaChunkForward_ChunkKdaFwd    72  222.243  compute    1   16   16
+  aclnnQuantMatmulWeightNz_QuantBatchMatmulV3_   496  156.247   memory   50  125   23
+  DequantSituQuant                               184  130.760  compute    0   17   72
+  aclnnDynamicQuantV2_DynamicQuant_DynamicQuan   496  110.989   memory    0   26   66
+
+Attention / MoE bound（组内流水时间占比 + 组内通信）:
+  [attn] dur= 306.80ms/步 | 计算(流水)   51% vs 访存(流水)   49% | 组内通信 0.00ms/步 (0%)
+  [moe] dur= 633.68ms/步 | 计算(流水)   48% vs 访存(流水)   52% | 组内通信 0.00ms/步 (0%)
+
+== D ep32: FlashMlaWithKvcache 大小核分离 ==
+  big_quant(512+64)    n= 2067 (53/步)   6.386 ms/步  bound=compute  流水 计算59%/访存41%
+  合计 6.386 ms/步
+
+== D ep64: FlashMlaWithKvcache 大小核分离 ==
+  big_quant(512+64)    n= 1908 (53/步)  12.204 ms/步  bound=compute  流水 计算59%/访存41%
+  合计 12.204 ms/步
+
+== D ep32: FlashMlaWithKvcache 大小核分离（按 q 首形状判别）==
+  big_quant_512+64   n=  936 (24/步)   5.153 ms/步  单次均值 214.7µs  bound=compute  流水 计算59%/访存41%
+  small_bf16_576     n= 1131 (29/步)   1.233 ms/步  单次均值  42.5µs  bound=compute  流水 计算57%/访存43%
+
+== D ep64: FlashMlaWithKvcache 大小核分离（按 q 首形状判别）==
+  big_quant_512+64   n=  864 (24/步)  10.140 ms/步  单次均值 422.5µs  bound=compute  流水 计算59%/访存41%
+  small_bf16_576     n= 1044 (29/步)   2.064 ms/步  单次均值  71.2µs  bound=compute  流水 计算56%/访存44%
+
+===== FlashMla 大小核流水构成（ep32，每调用 µs，%为该核内占比）=====
+big_quant(n=936,BlockNum=32): aic_scalar 166.8µs/16.7% | mac 154.5/15.5 | aiv_vec 147.8/14.8 | fixpipe 140.3/14.0 | aic_mte2 135.2/13.5 | aiv_scalar 121.2/12.1 | aic_mte1 104.8/10.5 → scalar 合计 28.8%（单项最大）
+small_bf16(n=1131): mac 24.2µs/21.2% | aic_scalar 15.4/13.5 | aic_mte1 14.6/12.8 | aiv_vec 14.0/12.3 | aic_mte2 13.8/12.1 | fixpipe 12.3/10.8 | aiv_scalar 11.4/10.0 → scalar 合计 23.5% > mac
+结论：scalar 流水 = 地址算术/块表间接寻址/逐页分段搬运的调度；与 KV 首轴非连续（PR18256）互证；MlaPrologV3(24/步) = stride-aware 读写路由

@@ -1,0 +1,30 @@
+span 10749ms | 全流 union busy 10469ms -> 全局利用率 97.4%
+
+流 busy（全窗口）:
+   N/A:   4740 ops   9948.3ms | top: ['hcom_broadcast__375_6_1', 'hcom_broadcast__375_9_1', 'hcom_broadcast__375_3_1']
+    47:  50274 ops   5654.6ms | top: ['aclnnGroupedMatmulWeightNz_Gro', 'aclnnChunkKdaFwd_KdaChunkForwa', 'FusedInferAttentionScore']
+    40:   2208 ops   1638.1ms | top: ['AivKernel']
+    37:   2392 ops   1238.3ms | top: ['aclnnQuantMatmulWeightNz_Quant', 'aclnnDynamicQuantV2_DynamicQua', 'DequantSituQuant']
+    92:   2424 ops    736.7ms | top: ['allgatherAicpuKernel', 'reduce_scatterAicpuKernel', 'allreduceAicpuKernel']
+    38:   1728 ops    342.3ms | top: ['aclnnMatmul_MatMulV3Common_Mat', 'aclnnInplaceCopy_SliceAiCore_S', 'aclnnInplaceCopy_CastAiCore_Ca']
+    87:     96 ops     11.0ms | top: ['sendAicpuKernel']
+    84:     12 ops      2.4ms | top: ['broadcastAicpuKernel']
+
+热点算子 top15（总时长）:
+     1638.1ms  n= 2208  AivKernel
+     1396.6ms  n= 1104  aclnnGroupedMatmulWeightNz_GroupedMatmul_Gro
+     1390.7ms  n=    1  hcom_broadcast__375_6_1
+     1367.3ms  n=    1  hcom_broadcast__375_9_1
+     1366.5ms  n=    1  hcom_broadcast__375_3_1
+     1358.5ms  n=    1  hcom_broadcast__375_0_1
+     1333.5ms  n=  432  aclnnChunkKdaFwd_KdaChunkForward_ChunkKdaFwd
+      937.5ms  n= 2976  aclnnQuantMatmulWeightNz_QuantBatchMatmulV3_
+      784.6ms  n= 1104  DequantSituQuant
+      665.9ms  n= 2976  aclnnDynamicQuantV2_DynamicQuant_DynamicQuan
+      487.8ms  n=  288  FusedInferAttentionScore
+      383.6ms  n= 1248  allgatherAicpuKernel
+      332.5ms  n= 1152  reduce_scatterAicpuKernel
+      329.4ms  n=  432  aclnnMatmul_MatMulV3Common_MatMulV3
+      286.6ms  n= 1008  aclnnMatmul_MatMulCommon_MatMulV2
+
+hcom: {'broadcast': (12, '5533.0ms'), 'alltoallv': (1656, '1627.6ms'), 'send': (96, '1008.8ms'), 'reduceScatter': (1152, '922.4ms'), 'allGather': (1800, '801.0ms'), 'allReduce': (24, '55.5ms')}

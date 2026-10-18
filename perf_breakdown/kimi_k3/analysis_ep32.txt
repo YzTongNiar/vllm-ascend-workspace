@@ -1,0 +1,33 @@
+ep32: 39 步 | 步wall med=53.1ms | gap med=5.0ms | 迭代≈58.1ms
+
+流分布 (每步):
+   508:  2163/step   43.113ms/step | top: {'DynamicMxQuant': 10881, 'aclnnQuantMatmulV5_QuantBatchMatmu': 9945, 'aclnnMatmul_MatMulV3Common_MatMulV': 8151}
+   505:   368/step   10.192ms/step | top: {'aclnnQuantMatmulWeightNz_QuantBatc': 7176, 'DynamicMxQuant': 3588, 'SituMxQuant': 3588}
+   N/A:   421/step    8.522ms/step | top: {'hcom_allReduce_AicpuKernel_503_10_': 39, 'hcom_allReduce_AicpuKernel_503_0_1': 11, 'hcom_allReduce_AicpuKernel_503_1_1': 11}
+   506:   276/step    2.516ms/step | top: {'aclnnMatmul_MatMulV3Common_MatMulV': 2691, 'aclnnInplaceCopy_SliceAiCore_Slice': 2691, 'aclnnInplaceCopy_CastAiCore_Cast': 2691}
+   562:   160/step    2.250ms/step | top: {'aclnnMatmul_MatMulV3Common_MatMulV': 1131, 'aclnnIndex_IndexAiCore_Index': 468, 'aclnnAddRmsNorm_AddRmsNorm_AddRmsN': 390}
+   560:    11/step    1.348ms/step | top: {'HcclLaunchAicpuKernel': 429}
+    61:   134/step    0.748ms/step | top: {'aclnnSub_SubAiCore_Sub': 507, 'aclnnInplaceCopy_SliceAiCore_Slice': 390, 'aclnnIndex_IndexAiCore_Index': 273}
+    57:   126/step    0.706ms/step | top: {'aclnnSub_SubAiCore_Sub': 468, 'aclnnInplaceCopy_CastAiCore_Cast': 468, 'aclnnInplaceZero_ZerosLikeAiCore_Z': 390}
+   504:    24/step    0.445ms/step | top: {'_pack': 936}
+    55:    36/step    0.220ms/step | top: {'aclnnInplaceZero_ZerosLikeAiCore_Z': 195, 'aclnnInplaceCopy_CastAiCore_Cast': 156, 'aclnnSub_SubAiCore_Sub': 117}
+   559:    30/step    0.185ms/step | top: {'aclnnInplaceCopy_SliceAiCore_Slice': 195, 'RmsNorm': 195, 'aclnnRotaryPositionEmbedding_Slice': 195}
+    24:     1/step    0.182ms/step | top: {'HcclLaunchAicpuKernel': 39}
+    23:     1/step    0.148ms/step | top: {'HcclLaunchAicpuKernel': 39}
+== 最大 gap 5.08ms 内: ==
+   562: 160 ops 2.251ms
+   560: 11 ops 1.329ms
+   N/A: 23 ops 0.835ms
+    61: 134 ops 0.745ms
+    57: 126 ops 0.690ms
+    55: 36 ops 0.210ms
+   559: 30 ops 0.182ms
+    23: 1 ops 0.125ms
+  union busy 4.87ms -> 全局空闲 4%
+
+== '0' 号算子 == Counter({('AttnResFwdFused', 'AI_VECTOR_CORE'): 7293}) durΣ/step: 1.6632117948717968 ms
+
+== hcom 通信 == {'allGather': ('194/step', '4.22ms/step'), 'allReduce': ('12/step', '0.52ms/step'), 'reduceScatter': ('186/step', '3.30ms/step'), 'alltoall': ('29/step', '0.48ms/step')}
+Traceback (most recent call last):
+  File "<stdin>", line 37, in <module>
+IndexError: list index out of range

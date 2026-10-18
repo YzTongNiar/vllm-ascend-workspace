@@ -1,0 +1,32 @@
+rows: 129853 | span s: 2.09
+锚点: {'hcom': 15156, 'MoeGatingTopK': 3312, 'MoeDistributeDispatch': 3312, 'GroupedMatmulSituQuant': 3312, 'CausalConv1d': 2484, 'RecurrentKda': 2484, 'FlashMlaWithKvcache': 2088, 'SwiGlu': 180}
+streams: {'404': 73548, 'N/A': 15156, '401': 13248, '402': 9936, '449': 5760, '61': 4825, '57': 4536, '55': 1296, '574': 1080, '575': 396}
+gap直方图(1-30ms): {3: 1, 6: 33, 8: 2}
+主流404: 37段 | wall med=57.2ms | gap med=6.6ms | ops/seg med=2043
+
+流 busy/step:
+   404:  1987/step   43.611ms/step
+   N/A:   409/step    9.606ms/step
+   401:   358/step    9.474ms/step
+   449:   155/step    3.251ms/step
+   402:   268/step    2.708ms/step
+   575:    10/step    1.305ms/step
+    61:   130/step    0.944ms/step
+    57:   122/step    0.831ms/step
+    55:    35/step    0.275ms/step
+   574:    29/step    0.246ms/step
+== hcom/step ==
+  allGather       194/step   4.473ms/step
+  reduceScatter   186/step   3.982ms/step
+  alltoall         29/step   0.746ms/step
+  allReduce        12/step   0.672ms/step
+
+== 最大 gap 8.89ms: union busy 8.67ms, 空闲 2% ==
+   449: 160 ops 3.34ms
+    61: 134 ops 3.11ms
+   575:  11 ops 1.49ms
+   N/A:  23 ops 0.94ms
+    57: 126 ops 0.84ms
+    55:  36 ops 0.26ms
+
+主流步内: wall=57.3ms busy=44.7ms -> 主流步内空闲 12.5ms（专家流401 busy 9.5ms 遮蔽其中大部分）

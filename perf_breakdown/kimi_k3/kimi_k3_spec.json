@@ -1,0 +1,225 @@
+{
+  "model_name": "kimi_k3",
+  "outlier": {
+    "method": "iqr",
+    "k": 1.5
+  },
+  "component_clusters": {
+    "attn": [
+      {
+        "cluster": "norm_rope",
+        "description": "KV norm/rope/cache",
+        "rules": [
+          {
+            "op_name_regex": "KvRmsNormRopeCache|RotaryPositionEmbedding|_triton_rope|LayerNormV4|RmsNorm"
+          }
+        ]
+      },
+      {
+        "cluster": "attention_core",
+        "description": "SparseFlashAttention core",
+        "rules": [
+          {
+            "op_name_regex": "SparseFlashAttention|TransposeBatchMatMul"
+          }
+        ]
+      },
+      {
+        "cluster": "quant",
+        "rules": [
+          {
+            "op_name": "DynamicMxQuant"
+          }
+        ]
+      },
+      {
+        "cluster": "matmuls",
+        "description": "qkv+o_proj quant matmuls",
+        "rules": [
+          {
+            "op_name_regex": "QuantBatchMatmulV3|BatchMatMulV3|MatMulV3"
+          }
+        ]
+      },
+      {
+        "cluster": "other",
+        "rules": [
+          {
+            "catch_all": true
+          }
+        ]
+      }
+    ],
+    "kda": [
+      {
+        "cluster": "norm_rope",
+        "rules": [
+          {
+            "op_name_regex": "KvRmsNormRopeCache|RotaryPositionEmbedding|_triton_rope|LayerNormV4|RmsNorm"
+          }
+        ]
+      },
+      {
+        "cluster": "indexer_core",
+        "rules": [
+          {
+            "op_name": "LightningIndexer"
+          }
+        ]
+      },
+      {
+        "cluster": "attn_out",
+        "description": "SFA output stage",
+        "rules": [
+          {
+            "op_name_regex": "SparseFlashAttention|TransposeBatchMatMul"
+          }
+        ]
+      },
+      {
+        "cluster": "quant",
+        "rules": [
+          {
+            "op_name": "DynamicMxQuant"
+          }
+        ]
+      },
+      {
+        "cluster": "matmuls",
+        "rules": [
+          {
+            "op_name_regex": "QuantBatchMatmulV3|BatchMatMulV3|MatMulV3"
+          }
+        ]
+      },
+      {
+        "cluster": "other",
+        "rules": [
+          {
+            "catch_all": true
+          }
+        ]
+      }
+    ],
+    "moe": [
+      {
+        "cluster": "gating",
+        "rules": [
+          {
+            "op_name_regex": "MoeGatingTopK|Muls|MatMulV3"
+          }
+        ]
+      },
+      {
+        "cluster": "dispatch",
+        "rules": [
+          {
+            "op_name": "MoeDistributeDispatchV3"
+          }
+        ]
+      },
+      {
+        "cluster": "experts",
+        "description": "grouped matmul + swiglu quant (349+347)",
+        "rules": [
+          {
+            "op_name_regex": "GroupedMatmul|SwigluGroupQuant|DynamicMxQuant|QuantBatchMatmulV3"
+          }
+        ]
+      },
+      {
+        "cluster": "combine",
+        "rules": [
+          {
+            "op_name": "MoeDistributeCombineV3"
+          }
+        ]
+      },
+      {
+        "cluster": "post",
+        "rules": [
+          {
+            "op_name_regex": "AddRmsNorm|^Add$|RmsNorm"
+          }
+        ]
+      },
+      {
+        "cluster": "other",
+        "rules": [
+          {
+            "catch_all": true
+          }
+        ]
+      }
+    ],
+    "dense_mlp": [
+      {
+        "cluster": "mlp_matmul",
+        "rules": [
+          {
+            "op_name_regex": "DynamicMxQuant|QuantBatchMatmulV3|MatMulV3"
+          }
+        ]
+      },
+      {
+        "cluster": "act",
+        "rules": [
+          {
+            "op_name_regex": "SwiGlu|SituAndMul"
+          }
+        ]
+      },
+      {
+        "cluster": "other",
+        "rules": [
+          {
+            "catch_all": true
+          }
+        ]
+      }
+    ],
+    "gqa": [
+      {
+        "cluster": "norm_rope_prefix",
+        "rules": [
+          {
+            "op_name_regex": "RmsNorm|Slice|_triton_rope|ScatterPaKvCache"
+          }
+        ]
+      },
+      {
+        "cluster": "attention_core",
+        "rules": [
+          {
+            "op_name": "FusedInferAttentionScore"
+          }
+        ]
+      },
+      {
+        "cluster": "o_proj_mlp",
+        "rules": [
+          {
+            "op_name_regex": "MatMulV3|SwiGlu|AddRmsNorm|^Add$|Cast|Mul"
+          }
+        ]
+      },
+      {
+        "cluster": "comm",
+        "description": "draft TP allreduce on 345",
+        "rules": [
+          {
+            "op_name_regex": "aiv_allreduce|aiv_all_gather"
+          }
+        ]
+      },
+      {
+        "cluster": "other",
+        "rules": [
+          {
+            "catch_all": true
+          }
+        ]
+      }
+    ]
+  }
+}

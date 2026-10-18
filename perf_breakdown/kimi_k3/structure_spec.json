@@ -1,0 +1,414 @@
+{
+  "model_hint": "Kimi K3 KimiLinear: 3 KDA-dense head + [3 full-attn + 1 KDA]x18 + 3 full-attn tail (all MoE), 78L + DSpark 5L GQA eager draft",
+  "phases": [
+    {
+      "name": "main",
+      "layers": 78,
+      "layer_compositions": [
+        {
+          "layer_range": [
+            0,
+            2
+          ],
+          "components": [
+            "kda",
+            "dense_mlp"
+          ]
+        },
+        {
+          "layer_range": [
+            3,
+            5
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            6,
+            6
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            7,
+            9
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            10,
+            10
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            11,
+            13
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            14,
+            14
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            15,
+            17
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            18,
+            18
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            19,
+            21
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            22,
+            22
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            23,
+            25
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            26,
+            26
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            27,
+            29
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            30,
+            30
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            31,
+            33
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            34,
+            34
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            35,
+            37
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            38,
+            38
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            39,
+            41
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            42,
+            42
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            43,
+            45
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            46,
+            46
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            47,
+            49
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            50,
+            50
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            51,
+            53
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            54,
+            54
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            55,
+            57
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            58,
+            58
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            59,
+            61
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            62,
+            62
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            63,
+            65
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            66,
+            66
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            67,
+            69
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            70,
+            70
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            71,
+            73
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            74,
+            74
+          ],
+          "components": [
+            "kda",
+            "moe"
+          ]
+        },
+        {
+          "layer_range": [
+            75,
+            77
+          ],
+          "components": [
+            "attn",
+            "moe"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "draft_head",
+      "layers": 5,
+      "layer_compositions": [
+        {
+          "layer_range": [
+            0,
+            4
+          ],
+          "components": [
+            "gqa"
+          ]
+        }
+      ]
+    }
+  ],
+  "expected_components": [
+    "kda",
+    "attn",
+    "moe",
+    "dense_mlp",
+    "gqa"
+  ],
+  "expected_layer_count": 83
+}
