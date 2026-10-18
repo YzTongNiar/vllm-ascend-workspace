@@ -101,8 +101,8 @@
 <table>
 <tr><th>#</th><th>阶段</th><th>目录</th><th>芯片 / 并行</th><th>模型配置</th><th>窗口 / 步数</th></tr>
 <tr><td>D1</td><td><span class="badge bd">D</span></td><td><code>kimik3_d_old/globalbs32_dspark7</code><br><span class="badge bbad">2026-10-15 更正（原 glm52_8k 数据有误已删）</span></td><td>dspark7 投机解码, global BS32</td><td>~93 层家族：69 KDA（RecurrentKda）+ 24 MLA（<b>FusedInferAttentionScore</b>）+ 92 MoE；DSpark draft 5 层</td><td>3.22s / 24 步</td></tr>
-<tr><td>D2</td><td><span class="badge bd">D</span></td><td><code>kimik3_A5_d_ep32</code></td><td>A5, BS32 / EP32 / DCP，无 draft</td><td>~93 层 ≈ 1 + 23×[3 KDA-MoE + 1 MLA-MoE]（69 KDA + 24 MLA + 92 MoE）</td><td>2.09s / 39 步</td></tr>
-<tr><td>D3</td><td><span class="badge bd">D</span></td><td><code>kimik3_A5_d_ep64</code></td><td>A5, BS128 / EP64，无 draft</td><td>同 D2（92 MoE ✓ / 69 KDA ✓）</td><td>2.09s / 36–37 步</td></tr>
+<tr><td>D2</td><td><span class="badge bd">D</span></td><td><code>kimik3_A5_d_ep32</code></td><td>A5, BS32 / EP32 / DCP</td><td>~93 层 ≈ 1 + 23×[3 KDA-MoE + 1 MLA-MoE]（69 KDA + 24 MLA + 92 MoE）；<b>DSpark draft（推 5 步，draft attention 走 FlashMla small_bf16 @侧流）</b></td><td>2.09s / 39 步</td></tr>
+<tr><td>D3</td><td><span class="badge bd">D</span></td><td><code>kimik3_A5_d_ep64</code></td><td>A5, BS128 / EP64（draft 同 D2）</td><td>同 D2（92 MoE ✓ / 69 KDA ✓）</td><td>2.09s / 36–37 步</td></tr>
 <tr><td>D4</td><td><span class="badge bp">P</span></td><td><code>kimik3_A3_p</code>（kimi-k3-1006-pd-prof_random_40k_p）</td><td>A3, <b>PD 分离部署</b>, random 40k tokens</td><td>~96 层 = 4 dense 头 + 92 MoE（72 KDA + 24 MLA 全注意力）</td><td>10.75s / 6 chunk 前向</td></tr>
 </table>
 <p class="small">方法备注：4 份 csv 均无 <code>Step Id</code> 列，均以主计算流 gap&gt;3ms 合成步边界；D1 剔除首尾残缺步。</p>
@@ -128,7 +128,7 @@
 <tr><td>局限</td><td>仅 rank0、无 memory 采集</td><td>—</td></tr>
 </table>
 <h2 id="s4"><span class="no">3.</span>栈演进（dspark7 基线 → A5 ep32）：算子融合对照</h2>
-<div class="note">左列 = 更正后的基线 <code>globalbs32_dspark7</code>（~93 层 + DSpark draft，global BS32），右列 = <code>ep32</code>（A5, BS32/EP32, 无 draft）。两次配置批量不同，<b>只比结构（哪些算子被融合），不比绝对耗时</b>。</div>
+<div class="note">左列 = 更正后的基线 <code>globalbs32_dspark7</code>（~93 层 + DSpark draft，global BS32），右列 = <code>ep32</code>（A5, BS32/EP32, DSpark draft 推 5 步）。两次配置批量不同，<b>只比结构（哪些算子被融合），不比绝对耗时</b>。</div>
 <table>
 <tr><th style="width:104px">融合点</th><th>基线 dspark7（globalbs32）</th><th>A5（ep32）</th><th>融合证据</th></tr>
 <tr>
@@ -150,10 +150,11 @@
   <td>同职责核替换，<b>2.70→1.66ms（−38%）</b>（配置不同，数值仅供参考）</td>
 </tr>
 </table>
-<h3>未变项（两代同构，无融合差异）</h3>
+<h3>未变项与算子升级</h3>
+<p style="font-size:13px;color:#475569">另有一处<b>算子升级</b>（非融合）：KDA 卷积 <span class="op op-old">CausalConv1d</span>（v1，基线，单次 16.1µs）→ <span class="op op-new">CausalConv1dV2</span>（A5，单次 10.6µs，−34%）。</p>
 <table>
 <tr><th>模块</th><th>两代一致的算子</th><th>基线量化（dspark7）</th></tr>
-<tr><td>KDA</td><td><code>RecurrentKda</code>（69/步，3.34ms）+ <code>CausalConv1dV2</code>（69/步，1.11ms）</td><td>已同代</td></tr>
+<tr><td>KDA 递归核</td><td><code>RecurrentKda</code>（69/步；两代<b>同名同算子</b>，单次 48.4→26.3µs 仅随批量变化）</td><td>同构</td></tr>
 <tr><td>量化 matmul</td><td><code>QuantMatmulV5</code>（255/步）+ <code>QuantMatmulWeightNz V4</code>（184/步@侧流562）</td><td>同代</td></tr>
 <tr><td>MoE 调度</td><td><code>MoeDistributeDispatchV3/CombineV3</code>（92/步）</td><td>同构</td></tr>
 <tr><td>MLA 元数据</td><td><code>MlaPrologV3</code>（24+5/步 @565/61）</td><td>同构（strided 读写路由，见 §7.6）</td></tr>
@@ -161,7 +162,7 @@
 <h3>非融合差异（配置层面）</h3>
 <table>
 <tr><th>差异</th><th>基线 dspark7</th><th>A5 ep32</th></tr>
-<tr><td>投机解码</td><td>DSpark draft 5 层（<code>FusedInferAttentionScore</code>+<code>MlaPrologV3</code> @流61，步间窗口执行）</td><td>无 draft</td></tr>
+<tr><td>投机解码（两边都有 DSpark draft，推 5 步）</td><td>draft attention 走 <code>FusedInferAttentionScore</code>（5 层 @流61，2.76ms/步）</td><td>draft attention <b>改用 FlashMla small_bf16 后端</b>（5 层 @侧流562，q=[24,64,576]，175.5µs/层，0.878ms/步；ep64 为 [48,64,576] 339.5µs/层）</td></tr>
 <tr><td>通信模式</td><td>allReduce 型：<code>HcclLaunchAicpuKernel</code> 54.4ms/步 + <code>hcom_allReduce</code> 24.5ms/步，占 busy 44.3%</td><td>RS/AG/a2a 细粒度：8.5ms/步（14.6%），单次 18–24µs</td></tr>
 </table>
 
@@ -230,7 +231,8 @@
 <tr><td>1</td><td><code>GroupedMatmulSituQuant</code></td><td class="num">10.39</td><td class="num">92</td><td><span class="badge bwarn">访存</span></td><td class="num">53/185/68</td></tr>
 <tr><td>2</td><td><code>MatMulV3Common</code></td><td class="num">6.59</td><td class="num">314</td><td><span class="badge bwarn">访存</span></td><td class="num">36/99/0</td></tr>
 <tr><td>3</td><td><b>FlashMlaWithKvcache·big_quant</b>（量化 cache，512+64 拆存；ep64 单次 214.7→422.5µs）</td><td class="num">5.15</td><td class="num">24</td><td><span class="badge bok">计算</span></td><td class="num">59/41</td></tr>
-<tr><td>3b</td><td><b>FlashMlaWithKvcache·small_bf16</b>（bf16 cache，576 合并；ep64 单次 42.5→71.2µs 亚线性）</td><td class="num">1.23</td><td class="num">29</td><td><span class="badge bok">计算</span></td><td class="num">57/43</td></tr>
+<tr><td>3b</td><td><b>FlashMla·small_bf16·主干近端段</b>（bf16 cache，q[32,12,576]@流508，14.8µs/次）</td><td class="num">0.36</td><td class="num">24</td><td><span class="badge bok">计算</span></td><td rowspan="2" class="num">57/43（合计）</td></tr>
+<tr><td>3b′</td><td><b>FlashMla·small_bf16·DSpark draft</b>（5 步，q[24,64,576]@流562，175.5µs/次，扫全量 KV）</td><td class="num">0.88</td><td class="num">5</td><td><span class="badge bok">计算</span></td></tr>
 <tr><td>4</td><td><code>GroupedMatmulWeightNz</code></td><td class="num">5.53</td><td class="num">92</td><td><span class="badge bwarn">访存</span></td><td class="num">49/173/65</td></tr>
 <tr><td>5</td><td><code>SituMxQuant</code></td><td class="num">5.46</td><td class="num">92</td><td><span class="badge bok">计算</span></td><td class="num">0/21/29</td></tr>
 <tr><td>6</td><td><code>QuantMatmulWeightNz V4</code></td><td class="num">4.26</td><td class="num">184</td><td><span class="badge bwarn">访存</span></td><td class="num">19/104/18</td></tr>
@@ -265,7 +267,7 @@
 <h3>7.5 MLA 深挖：FlashMla 大小核流水构成与 scalar 现象</h3>
 <table>
 <tr><th>流水（每调用）</th><th>big_quant（量化 cache）</th><th>small_bf16（bf16 cache）</th></tr>
-<tr><td><b>scalar 合计（aic+aiv）</b></td><td class="num"><b>28.8%（aic_scalar 16.7% 为单项最大）</b>，166.8µs/次</td><td class="num"><b>23.5% &gt; mac 21.2%</b>，26.8µs/次</td></tr>
+<tr><td><b>scalar 合计（aic+aiv）</b></td><td class="num"><b>28.8%（aic_scalar 16.7% 为单项最大）</b>，166.8µs/次</td><td class="num"><b>23.5% &gt; mac 21.2%</b>（混合口径：主干近端段 24×14.8µs + draft 5×175.5µs）</td></tr>
 <tr><td>mac / vec</td><td class="num">15.5% / 14.8%</td><td class="num">21.2% / 12.3%</td></tr>
 <tr><td>MTE 搬运合计</td><td class="num">~26.4%</td><td class="num">~32.1%</td></tr>
 </table>

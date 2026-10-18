@@ -23,8 +23,8 @@
 | # | 目录 | 阶段 | 芯片/并行 | 模型配置 | 采集窗口 | 步数 |
 |---|---|---|---|---|---|---|
 | D1 | `kimik3_d_old/globalbs32_dspark7`（**2026-10-15 更正**，原 glm52_dspark7_8k 数据有误已删） | decode | dspark7 投机解码, global BS32 | ~93 层家族：69 KDA（RecurrentKda）+ 24 MLA（**FusedInferAttentionScore**）+ 92 MoE；DSpark draft 5 层 | 3.22s | 24 |
-| D2 | `kimik3_A5_d_ep32` | decode | A5, BS32/EP32/DCP, 无 draft | ~93 层 ≈ 1 + 23×[3 KDA-MoE + 1 MLA-MoE]（69 RecurrentKda + 24 MLA + 92 MoE） | 2.09s | 39 |
-| D3 | `kimik3_A5_d_ep64` | decode | A5, BS128/EP64, 无 draft | 同 D2（92 MoE ✓ / 69 KDA ✓） | 2.09s | 36–37 |
+| D2 | `kimik3_A5_d_ep32` | decode | A5, BS32/EP32/DCP, DSpark draft（推 5 步，draft 走 FlashMla small_bf16） | ~93 层 ≈ 1 + 23×[3 KDA-MoE + 1 MLA-MoE]（69 KDA + 24 MLA + 92 MoE） | 2.09s | 39 |
+| D3 | `kimik3_A5_d_ep64` | decode | A5, BS128/EP64（draft 同 D2） | 同 D2（92 MoE ✓ / 69 KDA ✓） | 2.09s | 36–37 |
 | D4 | `kimik3_A3_p`（kimi-k3-1006-pd-prof_random_40k_p） | **prefill（PD 分离）** | A3, random 40k tokens | ~96 层 = 4 dense 头 + 92 MoE（72 KDA + 24 MLA 全注意力） | 10.75s | 6 chunk 前向 |
 
 **跨数据集不可直接比绝对迭代时间**（配置不同）；可比的是栈级/结构级结论。
@@ -56,7 +56,7 @@
 
 **未变项**：KDA（`RecurrentKda` 69/步 3.34ms + `CausalConv1dV2` 69/步 1.11ms 两代一致）、`QuantMatmulV5`/`WeightNz-V4` 同代、`MoeDistributeDispatch/CombineV3` 同构、`MlaPrologV3` 同构（strided 路由）。
 
-**非融合差异**：draft 有无（基线 DSpark 5 层 @流61）；通信模式（基线 allReduce 型 44.3% vs A5 RS/AG 细粒度 14.6%）。
+**非融合差异**：draft attention 后端（两边都有 DSpark draft 推 5 步——基线走 `FusedInferAttentionScore` 5 层 @流61 2.76ms/步，A5 **改用 FlashMla small_bf16** 5 层 @流562 q[24,64,576] 175.5µs/层 0.878ms/步，ep64 为 [48,64,576] 339.5µs/层）；通信模式（基线 allReduce 型 44.3% vs A5 RS/AG 细粒度 14.6%）。
 
 ## 4. 规模扩展：D2 → D3（ep32 → ep64）
 
@@ -128,7 +128,8 @@ D = "访存主导 + 通信次之" 的 decode 形态；P = "通信主导"（broad
 | 1 | GroupedMatmulSituQuant | 10.39 | 92 | **访存** | 53/185/68 |
 | 2 | MatMulV3Common | 6.59 | 314 | **访存** | 36/99/0 |
 | 3 | **FlashMlaWithKvcache·big_quant**（量化 cache，512+64 拆存） | 5.15 | 24 | **计算** | 59/41 |
-| 3b | **FlashMlaWithKvcache·small_bf16**（bf16 cache，576 合并） | 1.23 | 29 | 计算 | 57/43 |
+| 3b | **FlashMla·small_bf16·主干近端段**（q[32,12,576]@流508，14.8µs/次） | 0.36 | 24 | 计算 | 57/43（合计） |
+| 3b′ | **FlashMla·small_bf16·DSpark draft**（q[24,64,576]@流562，175.5µs/次，扫全量 KV） | 0.88 | 5 | 计算 | — |
 | 4 | GroupedMatmulWeightNz | 5.53 | 92 | **访存** | 49/173/65 |
 | 5 | SituMxQuant | 5.46 | 92 | 计算 | 0/21/29 |
 | 6 | QuantMatmulWeightNz V4 | 4.26 | 184 | **访存** | 19/104/18 |
