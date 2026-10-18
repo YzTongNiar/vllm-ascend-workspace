@@ -7,11 +7,11 @@
 
 ## 0. 执行摘要
 
-1. **D 基线（globalbs32_dspark7，2026-10-15 更正数据）迭代 170.8ms = 133.9ms 主图 + 36.9ms 步间空隙**；空隙空闲仅 12%（被 allReduce 25.5ms + 采样填充）。⚠ 此前基于 `glm52_dspark7_8k` 的 46ms 迭代/四专项/逐层拆解结论**随错误数据作废**。
+1. **D 基线（globalbs32_dspark7，2026-10-15 更正数据）迭代 170.8ms = 133.9ms 主图 + 36.9ms 步间空隙**；空隙空闲仅 12%（被 allReduce 25.5ms + 采样填充）。原 `glm52_dspark7_8k` 数据有误已删除（详见 §1 备注）。
 2. **新 D 基线三类占比：通信 44.3% 主导**（HcclLaunchAicpuKernel 54.4ms + hcom_allReduce 24.5ms/步，二者非双计）> 计算 33.3% > 访存 22.3%；attn 组计算 bound（54/46）、MoE 组均衡（51/49）+ 组内通信 23%；attention 用 FIA（非 ep32 的 FlashMla 大小核）。
-3. **A5 新栈（ep32）系统性解决了 8k 的四大问题**：步间空隙流水化（空闲 62%→4%）、KDA/激活/attn-residual 三处算子融合（每层主流算子 36→23 个）、attention 换 MLA 栈、通信标准化 HCCL。
+3. **dspark7 基线 → A5 的三大算子融合**：① MoE 激活量化融入组矩阵乘（`SituMxQuant`+`GroupedMatmulWeightNz` 分立 → `GroupedMatmulSituQuant`，独立 Situ 量化 184→92/步，每层专家核 4→3）；② MLA 单核 FIA → 量化分段双核（FlashMla big_quant + small_bf16 + LSE 合并）；③ attn-residual triton → CANN 原生（`_apply_attn_res_kernel` → `AttnResFwdFused`，2.70→1.66ms）。KDA/量化 matmul 两代同构未变。
 4. **ep64 证实 A5 栈批量扩展性**：BS32→BS128（4×），迭代仅 +9.8%（58.1→63.8ms），等效吞吐 ≈3.6×；通信占比微涨至 15.5%。
-5. **通信细粒度逐层 RS/AG 是贯穿全部 4 份数据的共性遗留问题**（每次 ~18–24µs、每步 380 次左右、占比 7→15.5% 随规模上升），是下一阶段第一优化优先级。
+5. **通信是全部数据集的共性短板**：dspark7 基线 allReduce 型高达 44.3%（HcclLaunch 54.4ms/步）；A5 RS/AG 细粒度 14.6→15.5%（ep32→ep64）；P 侧 ≈55%（去重后）——第一优化优先级。
 6. **P 阶段（A3 PD 分离 prefill）的主要矛盾不同**：KV broadcast 半重叠（1.36s/前向，期间主流仅 51% 在算）+ 量化/反量化占主计算 25%+；设备利用率 97.4% 但近半时间在通信。
 7. **P/D bound 形态对比**：D = 访存主导（53.4%）+ 通信 14.5%，MoE 访存 bound（Cube 未喂饱）；P = 通信主导（去重 a2a 双计后 ≈55%，KV broadcast/a2a），MoE 偏访存、attention 偏计算。
 8. **数据局限**：后三份 prof 均仅 rank0、未开 memory 采集、HCCL 带宽计数未采上；负载不均与显存仅在 8k 有跨卡证据。
@@ -35,7 +35,7 @@
 
 ## 2. D 基线（globalbs32_dspark7）分析结论
 
-> ⚠ 原 §2（glm52_dspark7_8k 四专项：46ms 迭代/通信 3.9ms/负载不均/显存 89GB/步间空隙 5.5ms 纯空闲）基于**错误数据，已整体作废**。详细过程见 `analysis_rank_compare.txt`（保留仅作历史）。
+> ⚠ 原 glm52_dspark7_8k 数据有误已于 2026-10-15 删除替换；全部派生产物（逐层拆解/切片/合成 CSV）已同步删除。
 
 - **迭代 170.8ms = 133.9 主图 + 36.9 步间空隙**；空隙空闲仅 12%（N/A allReduce 25.5ms + 采样 5.4ms 填充）
 - **三类占比（busy 归属，Σ178ms/步）**：通信 44.3%（78.9ms：HcclLaunchAicpuKernel 54.4 + hcom_allReduce 汇总 24.5，互不嵌套非双计）> 计算 33.3% > 访存 22.3% —— **通信主导**
@@ -44,34 +44,19 @@
 - 栈：与 ep32 同代（RecurrentKda/SituQuant/V5），差异 = attention 用 FIA 而非 FlashMla、含 draft、通信以 allReduce 为主
 - 局限：仅 rank0、无 memory 采集
 
-## 3. 栈演进对照（⚠ 基于已作废的 glm52 数据，保留作历史参考；新基线已是同代栈，与 ep32 的实际差异 = attention 后端 FIA→FlashMla 大小核、draft 有无、通信 allReduce→RS/AG）
+## 3. 栈演进（dspark7 基线 → A5 ep32）：算子融合对照
 
-以下"旧算子→新算子"表中 LightningIndexer/SparseFlashAttention/SwigluGroupQuant 等旧栈特征在新基线中已不存在（新基线直接是 RecurrentKda/SituQuant 栈），该表描述的是更早版本的演进
+> 左列 = 更正后基线 `globalbs32_dspark7`，右列 = `ep32`。批量配置不同，只比结构不比绝对耗时。
 
-### 3.1 算子栈替换对照
-
-| 模块 | D1（8k/dspark7） | D2（ep32/A5） | 性质 |
+| 融合点 | 基线 dspark7 | A5 ep32 | 融合证据 |
 |---|---|---|---|
-| KDA | LightningIndexer(35µs)+SFA(76µs)+Transpose 胶水（chunk_kda） | **RecurrentKda + CausalConv1dV2 融合核**；KDA 投影独立侧流（506） | 算子融合 + 多流 |
-| attention | GQA 路径 SparseFlashAttention | **FlashMlaWithKvcache + MlaPrologV3 + 量化 KV/Query triton 核** | MLA 栈 |
-| MoE 激活 | SwigluGroupQuant + GroupedMatmul 分立 | **SituMxQuant + GroupedMatmulSituQuant 融合**；专家单层 ~111µs 持平（BS32 下） | 融合 |
-| 量化 matmul | QuantBatchMatmulV3 | V5（主流）+ WeightNz V4（专家流） | 升级 |
-| attn residual | LayerNormV4/MatMulV3/rope 碎算子拼装 | **AttnResFwdFused**（csv 中名字为 "0" 的核，187/步, 1.66ms/步） | 融合 |
-| 通信 | aiv 自绘核（vector core） | HCCL 标准 AICPU（hcom_*） | 路径标准化 |
-| 算子密度 | 主流 ~36 算子/层（3000/83 层） | **~23 算子/层**（2163/93 层，层数还更多） | 融合总收益 |
+| **F1 MoE 激活量化融入组矩阵乘** | `SituMxQuant`（184/步, 12.07ms, 流565+562 各92）与 `GroupedMatmulWeightNz`（184/步, 13.86ms）分立——每层 up/down 各起独立激活量化 | up 方向 `GroupedMatmulSituQuant`（92/步, 10.39ms）Situ 量化**融进组矩阵乘**；独立 `SituMxQuant` **184→92**（5.46ms），down 保留 `GroupedMatmulWeightNz` | 基线无 GroupedMatmulSituQuant；A5 独立 Situ 量化恰减半 → **每层专家核 4→3** |
+| **F2 MLA 单核→量化分段双核** | `FusedInferAttentionScore` 单核全 bf16 扫全量 KV（24/步 26.43ms + draft 5/步 2.76ms@61），无 KV 在线量化 | `FlashMla·big_quant`（24/步, 5.15ms）+ `·small_bf16`（29/步, 1.23ms）+ `_quantize_mla_kv/_query` + `_flash_attention_gate` + `_merge_vectorized` LSE 合并 | 全 bf16 单核 → "量化长历史 + bf16 近端"双段（机制见 §6.3b/报告 §7.5-7.6） |
+| **F3 attn-residual triton→CANN** | `_apply_attn_res_kernel`（triton, 186/步, 2.70ms） | `AttnResFwdFused`（ACL 原生, csv 名 "0", 187/步, 1.66ms） | 2.70→1.66ms（−38%，配置不同仅供参考） |
 
-### 3.2 问题解决对照
+**未变项**：KDA（`RecurrentKda` 69/步 3.34ms + `CausalConv1dV2` 69/步 1.11ms 两代一致）、`QuantMatmulV5`/`WeightNz-V4` 同代、`MoeDistributeDispatch/CombineV3` 同构、`MlaPrologV3` 同构（strided 路由）。
 
-| D1 暴露的问题 | D2 的状态 | 证据 |
-|---|---|---|
-| 步间纯空闲 5.5ms（12%） | ✅ **已解决**：gap 5.08ms 内 union busy 4.87ms，**空闲仅 4%**（D1 为 62%）；TP 通信 launch/下步预处理/采样被流水填入空隙（流 562/560/61/57/559） | gap 剖析 |
-| draft eager + 采样在步外 | ✅ 配置移除（无 draft 算子） | 锚点计数 |
-| KDA 拼装开销 | ✅ 专用融合核 | LightningIndexer/SFA/Transpose 消失 |
-| 激活/量化分立 | ✅ Situ 融合 | SwiGlu 类消失 |
-| MoE 多流覆盖浅（overlap 17.3%） | ✅ 专家流 busy 10.2ms ≈ 主流步内空闲 10ms，基本全遮蔽 | 流统计 |
-| 通信细粒度 | ⚠️ **未解决且占比升高**（8.5ms/步，14.6%） | hcom AG 194 次 + RS 186 次/步 |
-
----
+**非融合差异**：draft 有无（基线 DSpark 5 层 @流61）；通信模式（基线 allReduce 型 44.3% vs A5 RS/AG 细粒度 14.6%）。
 
 ## 4. 规模扩展：D2 → D3（ep32 → ep64）
 
@@ -190,10 +175,6 @@ D = "访存主导 + 通信次之" 的 decode 形态；P = "通信主导"（broad
 | P0 | 逐层细粒度 RS/AG 通信（380 次/步，占比 7→15.5% 随规模上升） | 全部 4 份 | 层间通信合并/大粒度化、TP→SP/序列并行重切 | D 端 -1~2ms/步；占比封顶 |
 | P0 | P 阶段 KV broadcast 半重叠 | D4 | 分层流水外送 + KV 压缩 | TTFT ~-30% |
 | P1 | P 阶段量化/反量化 25% | D4 | Situ 融合迁移到 prefill 路径 | P 主计算 -20%± |
-| P1 | 通信等齐不对称（rank0/1/6/7 vs 2–5，1.1ms/步） | D1 | 查 HCCS 拓扑亲和/预取带宽争用；复采全 rank 验证 | -1ms/步（2.4%） |
-| P2 | dense_mlp bubble 37µs/层；aten::index 瞬时 0.14GB×2/步 | D1 | buffer 复用；层内调度 | 微 |
-| P2 | 8k 的 host 空闲 5.5ms | D1→已随新栈解决 | （已完成，作为回归基准） | — |
-| P3 | 显存稳态 89GB 高占用 + multistream pool 碎片风险 | D1 | memory pool 监控；index 分配复用 | 稳定性 |
 
 ---
 
@@ -209,14 +190,7 @@ D = "访存主导 + 通信次之" 的 decode 形态；P = "通信主导"（broad
 
 | 文件 | 内容 |
 |---|---|
-| `SUMMARY_四专项.md` | D1 通信/显存/负载不均/同步时延 |
 | `analysis_PD_bound.txt` | P/D 三类占比 + Top10 bound + 组级 bound 过程数据（含 FlashMla 大小核分离） |
 | `SUMMARY_D_baseline_globalbs32.md` / `analysis_D_new_globalbs32.txt` | 更正后 D 基线（globalbs32_dspark7）分析与过程数据 |
-| `SUMMARY_ep32对比.md`（含 ep64 节） | 栈演进 + 规模扩展对比 |
 | `SUMMARY_A3_p_prefill.md` | P 阶段画像 |
-| `analysis_rank_compare.txt` / `analysis_ep32.txt` / `analysis_ep64.txt` / `analysis_A3_p.txt` | 全部过程数据 |
-| `runs/rank0_dspark7_8k/index.html` + `metrics.json` | D1 逐层 cluster 抖动报告 |
-| `splits/`（155 component 实例） | D1 逐层下钻切片 |
-| `structure_spec.json` / `sample_ack.json` / `kimi_k3_spec.json` | D1 结构与规则（可跨 prof 复用） |
-| `kernel_details_steps125.csv` | D1 合成 Step Id 的派生 csv |
-| `HISTORY.md` | 运行日志（复用/变更/观察） |
+| `analysis_{ep32,ep64,A3_p,PD_bound,D_new_globalbs32}.txt` | 过程数据（PD_bound 含 FlashMla 大小核分离与流水构成） |
